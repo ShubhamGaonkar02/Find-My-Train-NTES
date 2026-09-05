@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FindMyTrain - Live Train Status & PNR Enquiry</title>
+    <link rel="icon" type="image/jpeg" href="https://find-my-train.vercel.app/logo.jpg" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#172554',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: linear-gradient(rgba(248, 250, 252, 0.86), rgba(248, 250, 252, 0.92)), url('https://upload.wikimedia.org/wikipedia/commons/5/5a/Vande_Bharat_Express_around_Mumbai.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .dark body {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.95)), url('https://upload.wikimedia.org/wikipedia/commons/5/5a/Vande_Bharat_Express_around_Mumbai.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 dark:text-slate-100 flex flex-col min-h-screen transition-colors duration-300">
+
+    <!-- Top Sticky Navigation Bar (FindMyTrain Brand) -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-300">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="/" class="flex items-center gap-3 group">
+                <img src="https://find-my-train.vercel.app/logo.jpg" alt="FindMyTrain Logo" class="w-9 h-9 rounded-full object-cover shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="flex items-center gap-2">
+                    <span class="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">FindMyTrain</span>
+                    <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">NTES Live</span>
+                </div>
+            </a>
+
+            <!-- Right Navigation Actions -->
+            <div class="flex items-center gap-3">
+                <!-- Back / Link to Main Website -->
+                <a href="https://find-my-train.vercel.app/" target="_blank" rel="noopener noreferrer" 
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
+                    <span>Main Site</span>
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </a>
+
+                <!-- Dark / Light Theme Toggle -->
+                <button id="theme-toggle" type="button" aria-label="Toggle theme"
+                    class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <!-- Sun Icon (shown in dark mode) -->
+                    <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <!-- Moon Icon (shown in light mode) -->
+                    <svg id="theme-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
+        
+        <!-- Hero Section Header (Styled like find-my-train.vercel.app) -->
+        <div class="text-center space-y-3 max-w-2xl mx-auto">
+            <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                Find your train <br class="hidden sm:inline" />
+                <span class="text-blue-600 dark:text-blue-400">routes & schedules.</span>
+            </h1>
+            <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base font-medium">
+                Experience real-time train running status, delay tracking, 10-digit PNR enquiry, and live station information instantly.
+            </p>
+        </div>
+
+        <!-- Navigation Segmented Tabs (Desktop & Mobile) -->
+        <div class="flex items-center justify-center">
+            <div class="inline-flex p-1.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-x-auto max-w-full gap-1">
+                <button onclick="switchTab('live-status')" data-tab-btn="live-status" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition duration-150 whitespace-nowrap bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    Live Status
+                </button>
+                <button onclick="switchTab('pnr')" data-tab-btn="pnr" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition duration-150 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                    PNR Status
+                </button>
+                <button onclick="switchTab('between-stations')" data-tab-btn="between-stations" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition duration-150 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                    Trains Between
+                </button>
+                <button onclick="switchTab('live-station')" data-tab-btn="live-station" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition duration-150 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Live Station
+                </button>
+                <button onclick="switchTab('schedule')" data-tab-btn="schedule" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition duration-150 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                    Train Route
+                </button>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: LIVE TRAIN STATUS                   -->
+        <!-- ========================================== -->
+        <section id="tab-live-status" class="space-y-6">
+            <!-- Search Card -->
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/40 dark:shadow-none space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Live Train Running Status</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Track real-time location, upcoming halts, and current delay.</p>
+                    </div>
+                </div>
+
+                <form onsubmit="handleLiveStatusSearch(event)" class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <div class="flex-1 relative">
+                        <input type="text" id="live-train-input" required placeholder="Enter Train Number (e.g. 12626, 22221)" 
+                            class="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition font-medium">
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-8 py-3.5 transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        Track Status
+                    </button>
+                </form>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="live-loading" class="hidden py-12 flex flex-col items-center justify-center gap-3">
+                <div class="w-10 h-10 border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
+                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Connecting to NTES Railway Servers...</span>
+            </div>
+
+            <!-- Journey Instance Date Selector -->
+            <div id="live-instances" class="hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xl space-y-3">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Select Journey Start Date</h3>
+                <div id="instance-buttons" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Live Status Results -->
+            <div id="live-result" class="hidden space-y-6">
+                <!-- Train Header Card -->
+                <div id="live-train-header" class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xl space-y-4">
+                    <!-- Dynamic train header info -->
+                </div>
+
+                <!-- Station Timeline -->
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                        <h3 class="font-bold text-lg text-slate-900 dark:text-white">Route Progress & Station Timetable</h3>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 px-3 py-1 bg-slate-100 dark:bg-slate-950 rounded-full border border-slate-200 dark:border-slate-800">Live NTES Feed</span>
+                    </div>
+                    <div id="live-timeline" class="relative pl-6 space-y-8 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
+                        <!-- Dynamic timeline items -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: PNR STATUS                          -->
+        <!-- ========================================== -->
+        <section id="tab-pnr" class="hidden space-y-6">
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/40 dark:shadow-none space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">10-Digit PNR Status Checker</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Auto-solves Indian Railways math captcha to fetch coach, berth, and charting details.</p>
+                    </div>
+                </div>
+
+                <form onsubmit="handlePnrSearch(event)" class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <div class="flex-1 relative">
+                        <input type="text" id="pnr-input" required pattern="[0-9]{10}" maxlength="10" placeholder="Enter 10-Digit PNR Number" 
+                            class="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition font-medium tracking-wide">
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-8 py-3.5 transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Get PNR Details
+                    </button>
+                </form>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="pnr-loading" class="hidden py-12 flex flex-col items-center justify-center gap-3">
+                <div class="w-10 h-10 border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
+                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Resolving math captcha and fetching PNR status...</span>
+            </div>
+
+            <!-- PNR Results -->
+            <div id="pnr-result" class="hidden space-y-6">
+                <!-- Dynamic PNR card info -->
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: TRAINS BETWEEN STATIONS             -->
+        <!-- ========================================== -->
+        <section id="tab-between-stations" class="hidden space-y-6">
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/40 dark:shadow-none space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Plan Journey / Trains Between Stations</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Discover all express and superfast trains connecting two railway stations.</p>
+                    </div>
+                </div>
+
+                <form onsubmit="handleBetweenSearch(event)" class="grid grid-cols-1 sm:grid-cols-7 gap-3 pt-2">
+                    <div class="sm:col-span-3">
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Leaving From</label>
+                        <input type="text" id="from-station" required placeholder="E.G. NDLS, CSMT, PNQ" 
+                            class="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition font-bold uppercase">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Going To</label>
+                        <input type="text" id="to-station" required placeholder="E.G. MMCT, TVC, HWH" 
+                            class="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition font-bold uppercase">
+                    </div>
+                    <div class="sm:col-span-1 flex items-end">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3.5 transition duration-150 flex items-center justify-center gap-1 shadow-lg shadow-blue-600/25">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="between-loading" class="hidden py-12 flex flex-col items-center justify-center gap-3">
+                <div class="w-10 h-10 border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
+                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Searching connecting trains...</span>
+            </div>
+
+            <!-- Trains Between Results -->
+            <div id="between-result" class="hidden"></div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: LIVE STATION                        -->
+        <!-- ========================================== -->
+        <section id="tab-live-station" class="hidden space-y-6">
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/40 dark:shadow-none space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Live Station Board</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">View upcoming arrivals and departures with platform numbers.</p>
+                    </div>
+                </div>
+
+                <form onsubmit="handleLiveStationSearch(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Station Code</label>
+                        <input type="text" id="station-code" required placeholder="E.G. NDLS, PNVL, BCT" 
+                            class="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition font-bold uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Time Window</label>
+                        <select id="station-hours" class="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition font-semibold">
+                            <option value="2">Next 2 Hours</option>
+                            <option value="4">Next 4 Hours</option>
+                            <option value="8">Next 8 Hours</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3.5 transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Get Station Activity
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="station-loading" class="hidden py-12 flex flex-col items-center justify-center gap-3">
+                <div class="w-10 h-10 border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
+                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Fetching station activity feed...</span>
+            </div>
+
+            <!-- Station Results -->
+            <div id="station-result" class="hidden"></div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 5: TRAIN ROUTE / SCHEDULE              -->
+        <!-- ========================================== -->
+        <section id="tab-schedule" class="hidden space-y-6">
+            <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-200/40 dark:shadow-none space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Train Route & Timetable</h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Inspect the complete station schedule, halt durations, and distance map.</p>
+                    </div>
+                </div>
+
+                <form onsubmit="handleScheduleSearch(event)" class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <div class="flex-1 relative">
+                        <input type="text" id="schedule-input" required placeholder="Enter Train Number (e.g. 12626)" 
+                            class="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition font-medium">
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-8 py-3.5 transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        View Full Route
+                    </button>
+                </form>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="schedule-loading" class="hidden py-12 flex flex-col items-center justify-center gap-3">
+                <div class="w-10 h-10 border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 rounded-full animate-spin"></div>
+                <span class="text-slate-600 dark:text-slate-400 text-sm font-medium">Fetching timetable records...</span>
+            </div>
+
+            <!-- Schedule Results -->
+            <div id="schedule-result" class="hidden"></div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 border-t border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+        <div class="max-w-5xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© FindMyTrain - Connected with Indian Railways NTES Enquiry.</p>
+            <p>Direct live running data powered by CRIS Indian Railways API.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // ==========================================
+        // THEME CONTROLLER (Light / Dark Mode)
+        // ==========================================
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeSun = document.getElementById('theme-sun');
+        const themeMoon = document.getElementById('theme-moon');
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('fmt-theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                themeSun.classList.remove('hidden');
+                themeMoon.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeSun.classList.add('hidden');
+                themeMoon.classList.remove('hidden');
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('fmt-theme', isDark ? 'dark' : 'light');
+            if (isDark) {
+                themeSun.classList.remove('hidden');
+                themeMoon.classList.add('hidden');
+            } else {
+                themeSun.classList.add('hidden');
+                themeMoon.classList.remove('hidden');
+            }
+        });
+
+        initTheme();
+
+        // ==========================================
+        // TAB SWITCHING CONTROLLER
+        // ==========================================
+        function switchTab(tabId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('[data-tab-btn]').forEach(btn => {
+                const btnTab = btn.getAttribute('data-tab-btn');
+                if (btnTab === tabId) {
+                    btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition duration-150 whitespace-nowrap bg-blue-600 text-white shadow-md shadow-blue-500/20";
+                } else {
+                    btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition duration-150 whitespace-nowrap text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800";
+                }
+            });
+        }
+
+        // ==========================================
+        // TOAST NOTIFICATIONS
+        // ==========================================
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded-xl shadow-2xl border text-sm font-semibold pointer-events-auto flex items-center gap-2.5 transition duration-300 transform translate-y-2 opacity-0 ${
+                type === 'success' 
+                ? 'bg-emerald-50 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300' 
+                : 'bg-rose-50 dark:bg-rose-950/90 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+            }`;
+            
+            const icon = type === 'success' 
+                ? '<svg class="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
+                : '<svg class="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+
+            toast.innerHTML = `${icon}<span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ==========================================
+        // 1. LIVE RUNNING STATUS FLOW
+        // ==========================================
+        let currentLiveTrainNo = "";
+
+        async function handleLiveStatusSearch(e) {
+            e.preventDefault();
+            const trainInput = document.getElementById('live-train-input').value.trim();
+            if (!trainInput) return;
+
+            document.getElementById('live-loading').classList.remove('hidden');
+            document.getElementById('live-instances').classList.add('hidden');
+            document.getElementById('live-result').classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/train_info?train_no=${trainInput}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Train not found');
+                }
+                const data = await res.json();
+                
+                if (!data.vInstanceList || data.vInstanceList.length === 0) {
+                    throw new Error("No active runs or instances found for this train.");
+                }
+
+                currentLiveTrainNo = data.TrainNo;
+                const btnContainer = document.getElementById('instance-buttons');
+                btnContainer.innerHTML = '';
+                
+                data.vInstanceList.forEach(inst => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    let statusLabel = "Scheduled";
+                    let colorClass = "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800";
+                    if (inst.trainStatus === 1) {
+                        statusLabel = "Running Now";
+                        colorClass = "border-amber-400/80 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100";
+                    } else if (inst.trainStatus === 2) {
+                        statusLabel = "Completed";
+                        colorClass = "border-emerald-400/80 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100";
+                    }
+
+                    btn.className = `flex flex-col items-center justify-center p-3 rounded-xl border text-center transition duration-150 ${colorClass}`;
+                    btn.innerHTML = `
+                        <span class="text-sm font-bold">${inst.startDate}</span>
+                        <span class="text-[10px] uppercase font-extrabold mt-1 tracking-wider opacity-80">${statusLabel}</span>
+                    `;
+                    btn.onclick = () => getLiveStatusDetails(data.TrainNo, inst.startDate);
+                    btnContainer.appendChild(btn);
+                });
+
+                document.getElementById('live-instances').classList.remove('hidden');
+
+            } catch (err) {
+                showToast(err.message);
+            } finally {
+                document.getElementById('live-loading').classList.add('hidden');
+            }
+        }
+
+        async function getLiveStatusDetails(trainNo, startDate) {
+            document.getElementById('live-loading').classList.remove('hidden');
+            document.getElementById('live-result').classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/live_status?train_no=${trainNo}&start_date=${startDate}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Failed to fetch live status');
+                }
+                const data = await res.json();
+                renderLiveStatus(data);
+            } catch (err) {
+                showToast(err.message);
+            } finally {
+                document.getElementById('live-loading').classList.add('hidden');
+            }
+        }
+
+        function renderLiveStatus(data) {
+            const header = document.getElementById('live-train-header');
+            const delayMin = parseInt(data.LDEL) || 0;
+            const delayText = delayMin > 0 ? `Delayed by ${data.LDEL} mins` : 'Running On Time';
+            const delayColor = delayMin > 0 ? 'text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800/60' : 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800/60';
+
+            header.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <span class="text-xl md:text-2xl font-black font-mono text-blue-600 dark:text-blue-400">${data.TN}</span>
+                            <h2 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white">${data.TNM}</h2>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1 font-semibold uppercase tracking-wider">${data.SRCN} (${data.SRC}) → ${data.DSTNHN || 'DESTINATION'} (${data.DSTN})</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full border text-xs font-bold self-start ${delayColor}">${delayText}</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div class="space-y-0.5">
+                        <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Current Position</span>
+                        <p class="text-slate-900 dark:text-slate-200 text-sm font-bold">${data.CPOS || 'Train yet to start from source'}</p>
+                    </div>
+                    <div class="space-y-0.5">
+                        <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Last Updated</span>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">${data.LASTUPD || 'No updates yet'}</p>
+                    </div>
+                </div>
+            `;
+
+            const timeline = document.getElementById('live-timeline');
+            timeline.innerHTML = '';
+
+            const stations = data.STNS || [];
+            if (stations.length === 0) {
+                timeline.innerHTML = `<div class="text-slate-400 text-center py-6 text-sm">No station timetable records found.</div>`;
+                document.getElementById('live-result').classList.remove('hidden');
+                return;
+            }
+
+            stations.forEach((stn, idx) => {
+                const item = document.createElement('div');
+                item.className = "relative flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-6";
+
+                const isLastStn = data.LSTN === stn.SC;
+                const isNextStn = data.NSTN === stn.SC;
+                const hasDeparted = stn.ISD || stn.ISA || (idx < stations.findIndex(s => s.SC === data.LSTN));
+                
+                let dotColor = "bg-slate-300 dark:bg-slate-700 ring-4 ring-white dark:ring-slate-900";
+                let textHighlight = "text-slate-500 dark:text-slate-400";
+                
+                if (isLastStn) {
+                    dotColor = "bg-amber-500 ring-4 ring-amber-200 dark:ring-amber-950 animate-pulse";
+                    textHighlight = "text-slate-900 dark:text-white font-black";
+                } else if (hasDeparted) {
+                    dotColor = "bg-blue-600 ring-4 ring-blue-100 dark:ring-blue-950";
+                    textHighlight = "text-slate-700 dark:text-slate-200 font-semibold";
+                } else if (isNextStn) {
+                    dotColor = "bg-indigo-500 ring-4 ring-indigo-100 dark:ring-indigo-950";
+                    textHighlight = "text-slate-900 dark:text-slate-100 font-bold";
+                }
+
+                const arrDelay = stn.DARR || '';
+                const depDelay = stn.DDEP || '';
+                const isDelayed = (arrDelay && arrDelay !== 'On Time') || (depDelay && depDelay !== 'On Time');
+                
+                const delayBadge = isDelayed 
+                    ? `<span class="text-[10px] px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800/50 text-rose-700 dark:text-rose-300 font-semibold">Delayed</span>`
+                    : `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-300 font-semibold">On Time</span>`;
+
+                item.innerHTML = `
+                    <div class="absolute -left-[20px] top-1.5 w-3.5 h-3.5 rounded-full ${dotColor}"></div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h4 class="text-sm font-bold truncate ${textHighlight}">${stn.SN}</h4>
+                            <span class="text-xs text-slate-400 dark:text-slate-500 font-mono font-bold">${stn.SC}</span>
+                        </div>
+                        <div class="flex gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                            <span>PF: <strong class="text-slate-700 dark:text-slate-300">${stn.PF || '--'}</strong></span>
+                            <span>Dist: <strong class="text-slate-700 dark:text-slate-300">${stn.DIST} km</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-4 shrink-0 text-right">
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
+                            <div>
+                                <span class="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold">Sch Arr / Dep</span>
+                                <span class="text-slate-600 dark:text-slate-300 font-mono font-medium">${stn.STA || '--'} / ${stn.STD || '--'}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold">Est Arr / Dep</span>
+                                <span class="text-blue-600 dark:text-blue-400 font-mono font-bold">${stn.ETA || '--'} / ${stn.ETD || '--'}</span>
+                            </div>
+                        </div>
+                        <div class="sm:mt-0.5">${delayBadge}</div>
+                    </div>
+                `;
+                timeline.appendChild(item);
+            });
+
+            document.getElementById('live-result').classList.remove('hidden');
+            setTimeout(() => {
+                const pulseElement = timeline.querySelector('.animate-pulse');
+                if (pulseElement) {
+                    pulseElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 200);
+        }
+
+        // ==========================================
+        // 2. PNR STATUS FLOW
+        // ==========================================
+        async function handlePnrSearch(e) {
+            e.preventDefault();
+            const pnrInput = document.getElementById('pnr-input').value.trim();
+            if (!pnrInput || pnrInput.length !== 10) {
+                showToast("PNR must be exactly 10 digits");
+                return;
+            }
+
+            document.getElementById('pnr-loading').classList.remove('hidden');
+            document.getElementById('pnr-result').classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/pnr_status?pnr=${pnrInput}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'PNR request failed. Captcha error or invalid PNR.');
+                }
+                const data = await res.json();
+                if (data.errorMessage) throw new Error(data.errorMessage);
+
+                renderPnrStatus(data);
+            } catch (err) {
+                showToast(err.message);
+            } finally {
+                document.getElementById('pnr-loading').classList.add('hidden');
+            }
+        }
+
+        function renderPnrStatus(data) {
+            const container = document.getElementById('pnr-result');
+            let passengerRows = '';
+            const passengers = data.passengerList || [];
+            
+            passengers.forEach(p => {
+                passengerRows += `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-black text-xs flex items-center justify-center border border-blue-200 dark:border-blue-800/40">${p.passengerNo}</span>
+                            <span class="text-sm font-bold text-slate-800 dark:text-slate-100">Passenger ${p.passengerNo}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <div class="px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <span class="text-[10px] text-slate-400 block uppercase font-semibold">Booking</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-300 font-mono">${p.bookingStatus}</span>
+                            </div>
+                            <div class="px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/40">
+                                <span class="text-[10px] text-blue-600 dark:text-blue-400 block uppercase font-semibold">Current</span>
+                                <span class="font-black text-blue-700 dark:text-blue-300 font-mono">${p.currentStatus}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                        <div>
+                            <span class="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">PNR Enquiry</span>
+                            <h2 class="text-2xl font-black text-slate-900 dark:text-white font-mono mt-0.5">${data.pnrNo}</h2>
+                        </div>
+                        <span class="px-3.5 py-1 bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full">
+                            Chart: ${data.chartStatus || 'Not Prepared'}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        <div>
+                            <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Train Details</span>
+                            <p class="text-slate-900 dark:text-slate-100 text-sm font-bold mt-0.5">${data.trainNo} - ${data.trainName}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Date of Journey</span>
+                            <p class="text-slate-900 dark:text-slate-100 text-sm font-semibold mt-0.5">${data.dateOfJourney || '--'}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Class & Quota</span>
+                            <p class="text-slate-900 dark:text-slate-100 text-sm font-semibold mt-0.5">${data.journeyClass || '--'} | ${data.quota || '--'}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Boarding Station</span>
+                            <p class="text-slate-700 dark:text-slate-300 text-sm font-medium mt-0.5">${data.boardingStationName || data.fromStationCode}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Destination Station</span>
+                            <p class="text-slate-700 dark:text-slate-300 text-sm font-medium mt-0.5">${data.reservationUptoName || data.toStationCode}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 dark:text-slate-500 text-[11px] font-bold uppercase tracking-wider">Total Passengers</span>
+                            <p class="text-slate-700 dark:text-slate-300 text-sm font-medium mt-0.5">${data.numberOfPassengers || '1'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-xl space-y-4">
+                    <h3 class="font-bold text-lg text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3">Passenger Wise Status</h3>
+                    <div class="space-y-2.5">
+                        ${passengerRows}
+                    </div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+
+        // ==========================================
+        // 3. TRAINS BETWEEN STATIONS FLOW
+        // ==========================================
+        async function handleBetweenSearch(e) {
+            e.preventDefault();
+            const fromCode = document.getElementById('from-station').value.trim().toUpperCase();
+            const toCode = document.getElementById('to-station').value.trim().toUpperCase();
+            if (!fromCode || !toCode) return;
+
+            document.getElementById('between-loading').classList.remove('hidden');
+            document.getElementById('between-result').classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/trains_between?from_station=${fromCode}&to_station=${toCode}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Search failed');
+                }
+                const data = await res.json();
+                renderBetweenTrains(data, fromCode, toCode);
+            } catch (err) {
+                showToast(err.message);
+            } finally {
+                document.getElementById('between-loading').classList.add('hidden');
+            }
+        }
+
+        function renderBetweenTrains(data, from, to) {
+            const container = document.getElementById('between-result');
+            container.innerHTML = '';
+            const trains = data.Trains || [];
+            
+            if (trains.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center text-slate-500 shadow-xl">
+                        No direct trains found running between ${from} and ${to}.
+                    </div>
+                `;
+                container.classList.remove('hidden');
+                return;
+            }
+
+            let cards = '';
+            trains.forEach(t => {
+                cards += `
+                    <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 hover:border-blue-400 dark:hover:border-slate-700 transition duration-150 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-md">
+                        <div class="space-y-1.5 flex-1">
+                            <div class="flex items-center gap-2.5 flex-wrap">
+                                <span class="text-base font-black bg-blue-50 dark:bg-slate-950 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-lg border border-blue-200 dark:border-slate-800 font-mono">${t.TrainNumber}</span>
+                                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">${t.TrainName}</h3>
+                            </div>
+                            <div class="flex gap-4 text-xs text-slate-500 dark:text-slate-400">
+                                <span>Source: <strong class="text-slate-700 dark:text-slate-300">${t.SourceName} (${t.Source})</strong></span>
+                                <span>Dest: <strong class="text-slate-700 dark:text-slate-300">${t.DestinationName} (${t.Destination})</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 self-stretch md:self-auto justify-between border-t border-slate-200 dark:border-slate-800 md:border-0 pt-3 md:pt-0">
+                            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase">${t.Type || 'EXP'}</span>
+                            <button onclick="checkTrainLive('${t.TrainNumber}')" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl transition shadow-md shadow-blue-500/20">
+                                Track Live
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center px-1">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Found ${trains.length} Connecting Trains</span>
+                    </div>
+                    <div class="space-y-3">
+                        ${cards}
+                    </div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+
+        function checkTrainLive(trainNo) {
+            switchTab('live-status');
+            document.getElementById('live-train-input').value = trainNo;
+            handleLiveStatusSearch(new Event('submit'));
+        }
+
+        // ==========================================
+        // 4. LIVE STATION ACTIVITY FLOW
+        // ==========================================
+        async function handleLiveStationSearch(e) {
+            e.preventDefault();
+            const stationCode = document.getElementById('station-code').value.trim().toUpperCase();
+            const hours = document.getElementById('station-hours').value;
+            if (!stationCode) return;
+
+            document.getElementById('station-loading').classList.remove('hidden');
+            document.getElementById('station-result').classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/station_live?station_code=${stationCode}&hours=${hours}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Station search failed');
+                }
+                const data = await res.json();
+                renderLiveStation(data, stationCode, hours);
+            } catch (err) {
+                showToast(err.message);
+            } finally {
+                document.getElementById('station-loading').classList.add('hidden');
+            }
+        }
+
+        function renderLiveStation(data, stationCode, hours) {
+            const container = document.getElementById('station-result');
+            container.innerHTML = '';
+            const trains = data.Trains || [];
+
+            if (trains.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center text-slate-500 shadow-xl">
+                        No trains reported arriving or departing from ${stationCode} in the next ${hours} hours.
+                    </div>
+                `;
+                container.classList.remove('hidden');
+                return;
+            }
+
+            let rows = '';
+            trains.forEach(t => {
+                const delay = parseInt(t.Delay) || 0;
+                const delayColor = delay > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+                const delayText = delay > 0 ? `${t.Delay} min` : 'On Time';
+
+                rows += `
+                    <tr class="border-b border-slate-200 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                        <td class="px-4 py-3.5 text-sm font-bold font-mono text-blue-600 dark:text-blue-400 cursor-pointer" onclick="checkTrainLive('${t.TrainNumber}')">${t.TrainNumber}</td>
+                        <td class="px-4 py-3.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            <span class="block">${t.TrainName}</span>
+                            <span class="text-xs text-slate-400 dark:text-slate-500 uppercase">${t.Source} → ${t.Destination}</span>
+                        </td>
+                        <td class="px-4 py-3.5 text-sm font-mono text-slate-600 dark:text-slate-300 text-center">${t.STA || '--'}</td>
+                        <td class="px-4 py-3.5 text-sm font-mono text-slate-600 dark:text-slate-300 text-center">${t.STD || '--'}</td>
+                        <td class="px-4 py-3.5 text-sm text-center font-bold ${delayColor}">${delayText}</td>
+                        <td class="px-4 py-3.5 text-sm text-center font-bold text-slate-700 dark:text-slate-300">${t.Platform || '--'}</td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xl">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-900 dark:text-white">Trains at ${stationCode} in next ${hours} Hours</h3>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800">${trains.length} scheduled</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/80 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 text-xs font-bold border-b border-slate-200 dark:border-slate-800">
+                                    <th class="px-4 py-3">Train No</th>
+                                    <th class="px-4 py-3">Train Details</th>
+                                    <th class="px-4 py-3 text-center">STA</th>
+                                    <th class="px-4 py-3 text-center">STD</th>
+                                    <th class="px-4 py-3 text-center">Delay</th>
+                                    <th class="px-4 py-3 text-center">PF</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+
+        // ==========================================
+        // 5. TRAIN SCHEDULE FLOW
+        // ==========================================
+        async function handleScheduleSearch(e) {
+            e.preventDefault();
+            const trainNo = document.getElementById('schedule-input').value.trim();
+            if (!trainNo) return;
+
+            document.getElementById('schedule-loading').classList.remove('hidden');
+            document.getElementById('schedule-result').classList.add('hidden');
+
+            try {
+                const res = await fetch(`/api/schedule?train_no=${trainNo}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Schedule fetch failed');
+                }
+                const data = await res.json();
+                renderSchedule(data);
+            } catch (err) {
+                showToast(err.message);
+            } finally {
+                document.getElementById('schedule-loading').classList.add('hidden');
+            }
+        }
+
+        function renderSchedule(data) {
+            const container = document.getElementById('schedule-result');
+            container.innerHTML = '';
+            const stops = data.ScheduleStops || [];
+            
+            let rows = '';
+            stops.forEach(s => {
+                rows += `
+                    <tr class="border-b border-slate-200 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                        <td class="px-4 py-3 text-sm font-semibold text-slate-400 text-center">${s.Sr || s.SrNo || ''}</td>
+                        <td class="px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-200">
+                            <span class="block">${s.SN || s.StationName}</span>
+                            <span class="text-xs text-slate-400 dark:text-slate-500 font-mono font-bold">${s.SC || s.StationCode}</span>
+                        </td>
+                        <td class="px-4 py-3 text-sm font-mono text-slate-600 dark:text-slate-300 text-center">${s.STA || s.Arrival || '--'}</td>
+                        <td class="px-4 py-3 text-sm font-mono text-slate-600 dark:text-slate-300 text-center">${s.STD || s.Departure || '--'}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 text-center">${s.Halt || '--'}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-slate-500 dark:text-slate-400 text-center">${s.DIST || s.Distance || '0'} km</td>
+                        <td class="px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 text-center">${s.Day || '1'}</td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xl">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50">
+                        <h3 class="font-extrabold text-lg text-slate-900 dark:text-white">${data.TrainName || 'Train Schedule'}</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5 font-bold uppercase tracking-wider font-mono">Train Number: ${data.TrainNumber || '--'} | Runs On: ${data.RunsOn || '--'}</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/80 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 text-xs font-bold border-b border-slate-200 dark:border-slate-800">
+                                    <th class="px-4 py-3 text-center">Stop</th>
+                                    <th class="px-4 py-3">Station</th>
+                                    <th class="px-4 py-3 text-center">Arr</th>
+                                    <th class="px-4 py-3 text-center">Dep</th>
+                                    <th class="px-4 py-3 text-center">Halt</th>
+                                    <th class="px-4 py-3 text-center">Dist</th>
+                                    <th class="px-4 py-3 text-center">Day</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+
+        // ==========================================
+        // INITIALIZE URL PARAMETERS & DEFAULT TAB
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || 'live-status';
+            switchTab(tab);
+
+            // If train is passed via query param: ?train=12626
+            const trainNo = params.get('train');
+            if (trainNo) {
+                document.getElementById('live-train-input').value = trainNo;
+                handleLiveStatusSearch(new Event('submit'));
+            }
+
+            // If PNR is passed: ?pnr=1234567890
+            const pnr = params.get('pnr');
+            if (pnr) {
+                switchTab('pnr');
+                document.getElementById('pnr-input').value = pnr;
+                handlePnrSearch(new Event('submit'));
+            }
+
+            // If from/to are passed: ?from=NDLS&to=MMCT
+            const fromStn = params.get('from');
+            const toStn = params.get('to');
+            if (fromStn && toStn) {
+                switchTab('between-stations');
+                document.getElementById('from-station').value = fromStn;
+                document.getElementById('to-station').value = toStn;
+                handleBetweenSearch(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
